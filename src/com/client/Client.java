@@ -99,11 +99,13 @@ public class Client {
 					brokenUrls.add(node.getUrl());
 					throw new BrokenURLException("HTTP GET " + node.getUrl() + " returned " + responseCode);
 				}
-			} catch( ConnectException ex ) {
+			} catch( IOException ex ) {
 				System.out.println("ERR: " + info);
 				brokenUrls.add(node.getUrl());
-				throw new BrokenURLException("HTTP GET " + node.getUrl() + " connection timed out");
+				throw new BrokenURLException("HTTP GET " + node.getUrl() + " connection failed");
 			}
+		} finally {
+			checkedUrls.add(node.getUrl());
 		}
 	}
 
@@ -145,8 +147,9 @@ public class Client {
 
 		for( Node n : node.getChildren() ) {
 			try {
-				if( !isUrlChecked(n.getUrl()) )
+				if( !isUrlChecked(n.getUrl()) ) {
 					transformNode(n, depth + 1);
+				}
 			} catch (BrokenURLException e) {}
 		}
 		for( Node n : node.getChildren() ) {
@@ -162,7 +165,6 @@ public class Client {
 	public boolean crawl() throws IOException {
 		try {
 			transformNode(baseNode, 0);
-			checkedUrls.add(baseNode.getUrl());
 		} catch (BrokenURLException e) {}
 
 		crawl(baseNode, 0);
