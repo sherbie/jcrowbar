@@ -26,7 +26,7 @@ public class Client {
 
 	/**
 	 * @param url  A resource handle (e.g. web page URL) conforming to RFC 3986
-	 * @param maxDepth  A zero-based index which limits how deep the client will crawl. 0 means only URLs on the initial page load will be checked.
+	 * @param maxDepth  A zero-based index which limits how deep the client will crawl. In order to check links contained in a response from a url of depth D, maxDepth must be D+1.
 	 */
 	public Client(String url, int maxDepth) {
 		baseNode = new Node(url);
@@ -129,7 +129,7 @@ public class Client {
 	 * @throws IOException
 	 */
 	void crawl(Node node, int depth) throws IOException {
-		if( isUrlChecked(node.getUrl()) || depth > depthLimit )
+		if( isUrlChecked(node.getUrl()) )
 			return;
 
 		checkedUrls.add(node.getUrl());
@@ -137,11 +137,11 @@ public class Client {
 		try {
 			Document nodeDocument = transformNode(node, depth);
 
-			if( nodeDocument != null ) {
+			if( nodeDocument != null && depth <= depthLimit ) {
 				generateChildNodes(node, nodeDocument);
 
 				for( Node n : node.getChildren() ) {
-					crawl(n, ++depth);
+					crawl(n, depth + 1);
 				}
 			}
 		} catch( BrokenURLException e) {}
