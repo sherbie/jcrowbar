@@ -22,6 +22,7 @@ public class Client {
 	}
 	
 	ArrayList<String> checkedUrls = new ArrayList<String>();
+	ArrayList<String> brokenUrls = new ArrayList<String>();
 
 	public boolean isUrlChecked(String url) {
 		return checkedUrls.contains(url);
@@ -46,11 +47,13 @@ public class Client {
 			} else {
 				System.out.println("ERR: " + info);
 				var ex = new IOException("HTTP GET " + node.getUrl() + " returned " + c.getResponseCode());
+				brokenUrls.add(node.getUrl());
 				ex.printStackTrace();
 				throw ex;
 			}
 		} catch( IOException e ) {
 			System.out.println("ERR: " + info);
+			brokenUrls.add(node.getUrl());
 			e.printStackTrace();
 			throw e;
 		}
@@ -87,8 +90,9 @@ public class Client {
 		} catch( IOException e) {}
 	}
 
-	public void crawl() {
+	public boolean crawl() {
 		crawl(baseNode, 0);
+		return brokenUrls.size() == 0;
 	}
 }
 
