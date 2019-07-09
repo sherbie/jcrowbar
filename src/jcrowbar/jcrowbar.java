@@ -13,7 +13,7 @@ import com.client.Client;
  *
  * Features implemented:
  *
- * - Depth-first traversal of target resource's href and src attribute links
+ * - Breadth-first traversal of target resource's href and src attribute links
  * - Output '[status]: page:link' message for each link checked where 'page' is the url where 'link' was located
  * - Configurable maximum depth
  * - Return non-zero status if any broken links were found

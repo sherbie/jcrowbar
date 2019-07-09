@@ -2,6 +2,8 @@ package com.client.util;
 
 import java.util.ArrayList;
 
+import org.jsoup.nodes.Document;
+
 /**
  * @author sherbie
  * A Node describes a place where the jcrowbar tool can visit. Nodes are organized in a tree-like hierarchy.
@@ -36,11 +38,19 @@ public class Node {
 		return children;
 	}
 
-
 	public void addChildWithUrl(String url) {
 		Node n = new Node(url);
 		n.setParent(this);
 		children.add(n);
 	}
-}
 
+	Document document = null;
+
+	public void setDocument(Document document) {
+		this.document = document;
+	}
+
+	public Document getDocument() {
+		return document;
+	}
+}

@@ -18,7 +18,7 @@ import com.client.util.Node;
 
 /**
  * @author sherbie
- * The Client is a handler for the jcrowbar cli. It will simultaneously build and traverse the Node tree in a depth-first-search manner.
+ * The Client is a handler for the jcrowbar cli. It will simultaneously build and traverse the Node tree in a breadth-first-search manner.
  */
 public class Client {
 	Node baseNode;
@@ -66,14 +66,14 @@ public class Client {
 	 * @throws IOException
 	 * @throws BrokenURLException
 	 */
-	Document transformNode(Node node, int depth) throws IOException, BrokenURLException {
+	void transformNode(Node node, int depth) throws IOException, BrokenURLException {
 		var pageUrl = node.getParent() != null ? node.getParent().getUrl() : baseNode.getUrl();
 		var info = "depth=" + depth + " page=" + pageUrl + " link=" + node.getUrl();
 
 		try {
 			Document d = Jsoup.connect(node.getUrl()).get();
 			System.out.println("OK : " + info);
-			return d;
+			node.setDocument(d);
 		} catch (MalformedURLException e) {
 			Pattern pattern = Pattern.compile(".+:.*");
 	        Matcher matcher = pattern.matcher(node.getUrl());
@@ -84,7 +84,9 @@ public class Client {
 	        } else {
 	        	throw e;
 	        }
-		} catch( UnsupportedMimeTypeException e ) {
+		} catch( IOException e ) {
+			// At this point, the resource is a non-html document (unsupported mime type or poorly-formed html)
+
 			var responseCode = getNonHtmlMimeTypeResourceResponseCode(node.getUrl());
 			boolean isGoodResponseCode = responseCode < 400;
 
@@ -96,8 +98,6 @@ public class Client {
 				throw new BrokenURLException("HTTP GET " + node.getUrl() + " returned " + responseCode);
 			}
 		}
-
-		return null;
 	}
 
 	/**
@@ -105,7 +105,9 @@ public class Client {
 	 * @param node
 	 * @param document
 	 */
-	void generateChildNodes(Node node, Document document) {
+	void generateChildNodes(Node node) {
+		var document = node.getDocument();
+
 		Element[] topLevelElements = {document.body(), document.head()};
 
 		for( Element topLevel : topLevelElements ) {
@@ -123,28 +125,26 @@ public class Client {
 	}
 
 	/**
-	 * Do a depth-first recursive search of all located URLs to a maximum depth.
+     * Do a breadth-first recursive search of all located URLs to a maximum depth.
 	 * @param node
 	 * @param depth
 	 * @throws IOException
 	 */
 	void crawl(Node node, int depth) throws IOException {
-		if( isUrlChecked(node.getUrl()) )
-			return;
 
-		checkedUrls.add(node.getUrl());
+		if( node.getDocument() != null && depth <= depthLimit ) {
+			generateChildNodes(node);
+		}
 
-		try {
-			Document nodeDocument = transformNode(node, depth);
-
-			if( nodeDocument != null && depth <= depthLimit ) {
-				generateChildNodes(node, nodeDocument);
-
-				for( Node n : node.getChildren() ) {
-					crawl(n, depth + 1);
-				}
-			}
-		} catch( BrokenURLException e) {}
+		for( Node n : node.getChildren() ) {
+			try {
+				if( !isUrlChecked(n.getUrl()) )
+					transformNode(n, depth + 1);
+			} catch (BrokenURLException e) {}
+		}
+		for( Node n : node.getChildren() ) {
+			crawl(n, depth + 1);
+		}
 	}
 
 	/**
@@ -153,6 +153,11 @@ public class Client {
 	 * @throws IOException
 	 */
 	public boolean crawl() throws IOException {
+		try {
+			transformNode(baseNode, 0);
+			checkedUrls.add(baseNode.getUrl());
+		} catch (BrokenURLException e) {}
+
 		crawl(baseNode, 0);
 		return brokenUrls.size() == 0;
 	}
