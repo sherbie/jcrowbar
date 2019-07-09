@@ -106,16 +106,19 @@ public class Client {
 	 * @param document
 	 */
 	void generateChildNodes(Node node, Document document) {
-		// TODO: search document.head()
-		for( Element e : document.body().getElementsByAttribute("href") ) {
-			var link = e.absUrl("href");
-			if( link != "" )
-				node.addChildWithUrl(link);
-		}
-		for( Element e : document.body().getElementsByAttribute("src") ) {
-			var link = e.absUrl("src");
-			if( link != "" )
-				node.addChildWithUrl(link);
+		Element[] topLevelElements = {document.body(), document.head()};
+
+		for( Element topLevel : topLevelElements ) {
+			for( Element e : topLevel.getElementsByAttribute("href") ) {
+				var link = e.absUrl("href");
+				if( link != "" )
+					node.addChildWithUrl(link);
+			}
+			for( Element e : topLevel.getElementsByAttribute("src") ) {
+				var link = e.absUrl("src");
+				if( link != "" )
+					node.addChildWithUrl(link);
+			}
 		}
 	}
 
