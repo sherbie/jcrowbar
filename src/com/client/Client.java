@@ -1,6 +1,7 @@
 package com.client;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -47,7 +48,7 @@ public class Client {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	int getNonHtmlMimeTypeResourceResponseCode(String url) throws IOException {
+	int getNonHtmlMimeTypeResourceResponseCode(String url) throws IOException, ConnectException {
 		URL urlObj = new URL(url);
 
 		HttpURLConnection c = (HttpURLConnection) urlObj.openConnection();
@@ -87,15 +88,21 @@ public class Client {
 		} catch( IOException e ) {
 			// At this point, the resource is a non-html document (unsupported mime type or poorly-formed html)
 
-			var responseCode = getNonHtmlMimeTypeResourceResponseCode(node.getUrl());
-			boolean isGoodResponseCode = responseCode < 400;
+			try {
+				var responseCode = getNonHtmlMimeTypeResourceResponseCode(node.getUrl());
+				boolean isGoodResponseCode = responseCode < 400;
 
-			if( isGoodResponseCode ) {
-				System.out.println("OK : " + info);
-			} else {
+				if( isGoodResponseCode ) {
+					System.out.println("OK : " + info);
+				} else {
+					System.out.println("ERR: " + info);
+					brokenUrls.add(node.getUrl());
+					throw new BrokenURLException("HTTP GET " + node.getUrl() + " returned " + responseCode);
+				}
+			} catch( ConnectException ex ) {
 				System.out.println("ERR: " + info);
 				brokenUrls.add(node.getUrl());
-				throw new BrokenURLException("HTTP GET " + node.getUrl() + " returned " + responseCode);
+				throw new BrokenURLException("HTTP GET " + node.getUrl() + " connection timed out");
 			}
 		}
 	}
