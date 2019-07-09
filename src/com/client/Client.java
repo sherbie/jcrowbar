@@ -24,14 +24,19 @@ public class Client {
 		return checkedUrls.contains(url);
 	}
 
-	Document transformUrl(String url) throws IOException {
+	Document transformNode(Node node) throws IOException {
+		var pageUrl = node.getParent() != null ? node.getParent().getUrl() : baseNode.getUrl();
+
 		try {
-			Document d = Jsoup.connect(url).get();
-			System.out.println("OK : " + url);
+			Document d = Jsoup.connect(node.getUrl()).get();
+			System.out.println("OK : page=" + pageUrl + " link=" + node.getUrl());
 			return d;
 		} catch( IOException e) {
+
+			System.out.println(
+				"ERR: page=" + pageUrl + " link=" + node.getUrl()
+			);
 			e.printStackTrace();
-			System.out.println("ERR: " + url);
 			throw e;
 		}
 	}
@@ -55,7 +60,7 @@ public class Client {
 
 		try {
 			checkedUrls.add(node.getUrl());
-			Document nodeDocument = transformUrl(node.getUrl());
+			Document nodeDocument = transformNode(node);
 			generateChildNodes(node, nodeDocument);
 
 			if( depth > depthLimit )
