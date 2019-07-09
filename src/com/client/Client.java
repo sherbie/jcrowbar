@@ -2,6 +2,7 @@ package com.client;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -28,6 +29,15 @@ public class Client {
 		return checkedUrls.contains(url);
 	}
 
+	int getNonHtmlMimeTypeResourceResponseCode(String url) throws MalformedURLException, IOException {
+		HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+		c.setRequestMethod("GET");
+		c.connect();
+		c.disconnect();
+
+		return c.getResponseCode();
+	}
+
 	Document transformNode(Node node) throws UnsupportedMimeTypeException, IOException {
 		var pageUrl = node.getParent() != null ? node.getParent().getUrl() : baseNode.getUrl();
 		var info = "page=" + pageUrl + " link=" + node.getUrl();
@@ -37,16 +47,13 @@ public class Client {
 			System.out.println("OK : " + info);
 			return d;
 		} catch( UnsupportedMimeTypeException e ) {
-			HttpURLConnection c = (HttpURLConnection) new URL(node.getUrl()).openConnection();
-			c.setRequestMethod("GET");
-			c.connect();
-			if( c.getResponseCode() < 400 ) {
-				c.disconnect();
+			var responseCode = getNonHtmlMimeTypeResourceResponseCode(node.getUrl());
+			if( responseCode < 400 ) {
 				System.out.println("OK : " + info);
 				throw e;
 			} else {
 				System.out.println("ERR: " + info);
-				var ex = new IOException("HTTP GET " + node.getUrl() + " returned " + c.getResponseCode());
+				var ex = new IOException("HTTP GET " + node.getUrl() + " returned " + responseCode);
 				brokenUrls.add(node.getUrl());
 				ex.printStackTrace();
 				throw ex;
