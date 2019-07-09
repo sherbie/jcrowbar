@@ -66,9 +66,9 @@ public class Client {
 	 * @throws IOException
 	 * @throws BrokenURLException
 	 */
-	Document transformNode(Node node) throws IOException, BrokenURLException {
+	Document transformNode(Node node, int depth) throws IOException, BrokenURLException {
 		var pageUrl = node.getParent() != null ? node.getParent().getUrl() : baseNode.getUrl();
-		var info = "page=" + pageUrl + " link=" + node.getUrl();
+		var info = "depth=" + depth + " page=" + pageUrl + " link=" + node.getUrl();
 
 		try {
 			Document d = Jsoup.connect(node.getUrl()).get();
@@ -106,6 +106,7 @@ public class Client {
 	 * @param document
 	 */
 	void generateChildNodes(Node node, Document document) {
+		// TODO: search document.head()
 		for( Element e : document.body().getElementsByAttribute("href") ) {
 			var link = e.absUrl("href");
 			if( link != "" )
@@ -125,19 +126,17 @@ public class Client {
 	 * @throws IOException
 	 */
 	void crawl(Node node, int depth) throws IOException {
-		if( isUrlChecked(node.getUrl()) )
+		if( isUrlChecked(node.getUrl()) || depth > depthLimit )
 			return;
 
 		checkedUrls.add(node.getUrl());
 
 		try {
-			Document nodeDocument = transformNode(node);
+			Document nodeDocument = transformNode(node, depth);
 
 			if( nodeDocument != null ) {
 				generateChildNodes(node, nodeDocument);
 
-				if( depth > depthLimit )
-					return;
 				for( Node n : node.getChildren() ) {
 					crawl(n, ++depth);
 				}
