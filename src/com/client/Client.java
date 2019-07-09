@@ -1,9 +1,12 @@
 package com.client;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 import org.jsoup.Jsoup;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -24,18 +27,30 @@ public class Client {
 		return checkedUrls.contains(url);
 	}
 
-	Document transformNode(Node node) throws IOException {
+	Document transformNode(Node node) throws UnsupportedMimeTypeException, IOException {
 		var pageUrl = node.getParent() != null ? node.getParent().getUrl() : baseNode.getUrl();
+		var info = "page=" + pageUrl + " link=" + node.getUrl();
 
 		try {
 			Document d = Jsoup.connect(node.getUrl()).get();
-			System.out.println("OK : page=" + pageUrl + " link=" + node.getUrl());
+			System.out.println("OK : " + info);
 			return d;
-		} catch( IOException e) {
-
-			System.out.println(
-				"ERR: page=" + pageUrl + " link=" + node.getUrl()
-			);
+		} catch( UnsupportedMimeTypeException e ) {
+			HttpURLConnection c = (HttpURLConnection) new URL(node.getUrl()).openConnection();
+			c.setRequestMethod("GET");
+			c.connect();
+			if( c.getResponseCode() < 400 ) {
+				c.disconnect();
+				System.out.println("OK : " + info);
+				throw e;
+			} else {
+				System.out.println("ERR: " + info);
+				var ex = new IOException("HTTP GET " + node.getUrl() + " returned " + c.getResponseCode());
+				ex.printStackTrace();
+				throw ex;
+			}
+		} catch( IOException e ) {
+			System.out.println("ERR: " + info);
 			e.printStackTrace();
 			throw e;
 		}
@@ -58,8 +73,9 @@ public class Client {
 		if( isUrlChecked(node.getUrl()) )
 			return;
 
+		checkedUrls.add(node.getUrl());
+
 		try {
-			checkedUrls.add(node.getUrl());
 			Document nodeDocument = transformNode(node);
 			generateChildNodes(node, nodeDocument);
 
