@@ -1,5 +1,6 @@
 package jcrowbar;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import com.client.Client;
@@ -33,7 +34,7 @@ public class jcrowbar {
 	    add("--help");
 	}};
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		if( args.length < 1 || helpFlags.stream().filter(x -> x.equalsIgnoreCase(args[0])).count() > 0 ) {
 			System.out.println(help);
 			System.exit(0);
