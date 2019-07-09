@@ -1,5 +1,5 @@
 # jcrowbar
-A simple java website crawler
+A simple website crawler implemented in java
 
 ## Setup Requirements
 
@@ -13,3 +13,18 @@ Run the installation script to compile all necessary code for execution:
 ```
 ./install.sh
 ```
+
+## Execution
+
+See execution details by running the application with the help flag
+```
+java -jar jcrowbar.jar -h
+```
+
+## TODO
+
+* Client-side DOM mutation support (e.g. client-side js-rendered links)
+* More robust logging features
+* Asynchronous page loading
+
+:sparkles:
