@@ -2,9 +2,16 @@ package com.client.util;
 
 import java.util.ArrayList;
 
+/**
+ * @author sherbie
+ * A Node describes a place where the jcrowbar tool can visit. Nodes are organized in a tree-like hierarchy.
+ */
 public class Node {
 	String url;
 	
+	/**
+	 * @param url  A resource handle (e.g. web page URL) conforming to RFC 3986
+	 */
 	public Node(String url) {
 		this.url = url;
 	}
