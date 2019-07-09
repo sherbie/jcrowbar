@@ -24,7 +24,7 @@ public class Client {
 		return checkedUrls.contains(url);
 	}
 
-	public Document transformUrl(String url) throws IOException {
+	Document transformUrl(String url) throws IOException {
 		try {
 			Document d = Jsoup.connect(url).get();
 			System.out.println("OK : " + url);
@@ -36,7 +36,7 @@ public class Client {
 		}
 	}
 
-	public void generateChildNodes(Node node, Document d) {
+	void generateChildNodes(Node node, Document d) {
 		for( Element e : d.body().getElementsByAttribute("href") ) {
 			var link = e.absUrl("href");
 			if( link != "" )
